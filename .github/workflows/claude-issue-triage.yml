@@ -100,6 +100,7 @@ jobs:
             Si es una mejora o pregunta, adapta "Causa probable" a "Contexto actual en el código".
 
             ### 3. Publicar el diagnóstico (un único comentario actualizable)
+            El comentario DEBE estar escrito en formato Markdown compatible con GitHub (GitHub Flavored Markdown): usa encabezados (`##`, `###`), negritas, listas, listas de tareas (`- [ ]`) para los criterios de aceptación, tablas si aportan claridad, y bloques de código con triple acento grave y lenguaje (```js) para fragmentos de código. Usa `` `código` `` en línea para nombres de archivos, funciones y variables. Asegúrate de que el Markdown se renderice correctamente (líneas en blanco entre bloques, bloques de código cerrados).
             El comentario DEBE empezar con la línea `<!-- claude-issue-triage -->`.
             1. Lista los comentarios: `gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments --paginate`.
             2. Si ya existe uno cuyo cuerpo contiene `<!-- claude-issue-triage -->`, actualízalo con `gh api -X PATCH repos/${{ github.repository }}/issues/comments/<id> -f body=...`.
