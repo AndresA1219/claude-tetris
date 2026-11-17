@@ -15,6 +15,18 @@ const COLORS = [
   '#ffb74d', // L - orange
 ];
 
+// Paleta más saturada/oscura para legibilidad sobre fondo claro
+const COLORS_LIGHT = [
+  null,
+  '#00acc1', // I
+  '#f9a825', // O
+  '#8e24aa', // T
+  '#43a047', // S
+  '#e53935', // Z
+  '#1e88e5', // J
+  '#fb8c00', // L
+];
+
 const PIECES = [
   null,
   [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], // I
@@ -39,6 +51,24 @@ const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
+const themeToggle = document.getElementById('theme-toggle');
+
+let gridColor = '#22222e';
+let palette = COLORS;
+let blockHighlight = 'rgba(255,255,255,0.12)';
+
+function applyTheme(light, persist) {
+  if (light) document.documentElement.dataset.theme = 'light';
+  else delete document.documentElement.dataset.theme;
+  themeToggle.setAttribute('aria-checked', String(light));
+  gridColor = getComputedStyle(document.documentElement).getPropertyValue('--grid').trim() || gridColor;
+  palette = light ? COLORS_LIGHT : COLORS;
+  blockHighlight = light ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.12)';
+  if (persist) {
+    try { localStorage.setItem('theme', light ? 'light' : 'dark'); } catch (e) {}
+  }
+  if (current && next) { draw(); drawNext(); } // repinta también en pausa / game over
+}
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 
@@ -158,18 +188,18 @@ function updateHUD() {
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
-  const color = COLORS[colorIndex];
+  const color = palette[colorIndex];
   context.globalAlpha = alpha ?? 1;
   context.fillStyle = color;
   context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
   // highlight
-  context.fillStyle = 'rgba(255,255,255,0.12)';
+  context.fillStyle = blockHighlight;
   context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
   context.globalAlpha = 1;
 }
 
 function drawGrid() {
-  ctx.strokeStyle = '#22222e';
+  ctx.strokeStyle = gridColor;
   ctx.lineWidth = 0.5;
   for (let c = 1; c < COLS; c++) {
     ctx.beginPath();
@@ -301,4 +331,10 @@ document.addEventListener('keydown', e => {
 
 restartBtn.addEventListener('click', init);
 
+themeToggle.addEventListener('click', () => {
+  applyTheme(document.documentElement.dataset.theme !== 'light', true);
+  themeToggle.blur(); // evita que Space active el botón en vez de la caída
+});
+
 init();
+applyTheme(document.documentElement.dataset.theme === 'light', false);
