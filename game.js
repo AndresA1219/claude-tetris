@@ -55,6 +55,7 @@ const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 const themeToggle = document.getElementById('theme-toggle');
+const skinSelect = document.getElementById('skin-select');
 
 let gridColor = '#22222e';
 let palette = COLORS;
@@ -65,7 +66,7 @@ function applyTheme(light, persist) {
   else delete document.documentElement.dataset.theme;
   themeToggle.setAttribute('aria-checked', String(light));
   gridColor = getComputedStyle(document.documentElement).getPropertyValue('--grid').trim() || gridColor;
-  palette = light ? COLORS_LIGHT : COLORS;
+  palette = SKINS[skinName].palette(light);
   blockHighlight = light ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.12)';
   if (persist) {
     try { localStorage.setItem('theme', light ? 'light' : 'dark'); } catch (e) {}
@@ -189,27 +190,129 @@ function updateHUD() {
   levelEl.textContent = level;
 }
 
+// ---- Skins ----
+// Cada skin: palette(light) y drawBlock(context, px, py, color, size) en píxeles.
+// El fondo del tablero y la rejilla vienen del CSS (data-skin en <html>).
+const PASTEL = [null, '#a8e6ef', '#fff1a8', '#d9b8f0', '#b8ecc0', '#f5b5b5', '#b5d2f5', '#fcd0a1', '#cfd8dc'];
+const PASTEL_LIGHT = [null, '#6fcfdc', '#f5d95c', '#bd8fe0', '#84d493', '#ee8f8f', '#82b4ee', '#f7b36a', '#a4b3bb'];
+const NEON = [null, '#00f0ff', '#fff200', '#d400ff', '#39ff14', '#ff2a4d', '#2d7bff', '#ff8c00', '#c8d6e0'];
+
+function roundRectPath(context, x, y, w, h, r) {
+  context.beginPath();
+  context.moveTo(x + r, y);
+  context.arcTo(x + w, y, x + w, y + h, r);
+  context.arcTo(x + w, y + h, x, y + h, r);
+  context.arcTo(x, y + h, x, y, r);
+  context.arcTo(x, y, x + w, y, r);
+  context.closePath();
+}
+
+const SKINS = {
+  retro: {
+    palette: light => (light ? COLORS_LIGHT : COLORS),
+    drawBlock(context, px, py, color, size) {
+      context.fillStyle = color;
+      context.fillRect(px + 1, py + 1, size - 2, size - 2);
+      context.fillStyle = blockHighlight;
+      context.fillRect(px + 1, py + 1, size - 2, 4);
+    },
+  },
+  neon: {
+    palette: () => NEON, // el fondo siempre es negro
+    drawBlock(context, px, py, color, size) {
+      context.shadowColor = color;
+      context.shadowBlur = 10;
+      context.fillStyle = 'rgba(0,0,0,0.85)';
+      context.fillRect(px + 3, py + 3, size - 6, size - 6);
+      context.strokeStyle = color;
+      context.lineWidth = 2;
+      context.strokeRect(px + 3, py + 3, size - 6, size - 6);
+      context.shadowBlur = 0;
+      context.fillStyle = color;
+      context.globalAlpha *= 0.35;
+      context.fillRect(px + 6, py + 6, size - 12, size - 12);
+    },
+  },
+  pastel: {
+    palette: light => (light ? PASTEL_LIGHT : PASTEL),
+    drawBlock(context, px, py, color, size) {
+      roundRectPath(context, px + 2, py + 2, size - 4, size - 4, 8);
+      context.fillStyle = color;
+      context.fill();
+      context.fillStyle = 'rgba(255,255,255,0.35)';
+      roundRectPath(context, px + 6, py + 5, size - 14, 5, 2.5);
+      context.fill();
+    },
+  },
+  pixel: {
+    palette: light => (light ? COLORS_LIGHT : COLORS),
+    drawBlock(context, px, py, color, size) {
+      const u = size / 6; // rejilla de 6x6 "píxeles" por bloque
+      context.fillStyle = color;
+      context.fillRect(px, py, size, size);
+      context.fillStyle = 'rgba(255,255,255,0.4)'; // luz arriba/izquierda
+      context.fillRect(px, py, size, u);
+      context.fillRect(px, py, u, size);
+      context.fillStyle = 'rgba(0,0,0,0.35)'; // sombra abajo/derecha
+      context.fillRect(px, py + size - u, size, u);
+      context.fillRect(px + size - u, py, u, size);
+      context.fillStyle = 'rgba(0,0,0,0.18)'; // textura de píxeles
+      context.fillRect(px + 2 * u, py + 2 * u, u, u);
+      context.fillRect(px + 3 * u, py + 3 * u, u, u);
+      context.fillStyle = 'rgba(255,255,255,0.25)';
+      context.fillRect(px + 3 * u, py + 2 * u, u, u);
+      context.fillRect(px + 2 * u, py + 3 * u, u, u);
+    },
+  },
+};
+
+let skinName = 'retro';
+try {
+  const saved = localStorage.getItem('skin');
+  if (saved && SKINS[saved]) skinName = saved;
+} catch (e) {}
+
+function applySkin(name, persist) {
+  if (!SKINS[name]) name = 'retro';
+  skinName = name;
+  document.documentElement.dataset.skin = name;
+  skinSelect.value = name;
+  if (persist) {
+    try { localStorage.setItem('skin', name); } catch (e) {}
+  }
+  // applyTheme recalcula paleta/rejilla y repinta (también en pausa / game over)
+  applyTheme(document.documentElement.dataset.theme === 'light', false);
+}
+
+function resetGlow(context) {
+  context.shadowBlur = 0;
+  context.shadowColor = 'transparent';
+}
+
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
-  const color = palette[colorIndex];
   context.globalAlpha = alpha ?? 1;
-  context.fillStyle = color;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-  // highlight
-  context.fillStyle = blockHighlight;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
+  SKINS[skinName].drawBlock(context, x * size, y * size, palette[colorIndex], size);
   context.globalAlpha = 1;
+  resetGlow(context);
 }
 
 // Círculo en la celda central vacía de la tuerca
 function drawNutHole(context, x, y, size, alpha) {
   context.globalAlpha = alpha ?? 1;
   context.strokeStyle = palette[8];
-  context.lineWidth = 3;
+  context.lineWidth = skinName === 'pixel' ? 4 : 3;
+  if (skinName === 'neon') { context.shadowColor = palette[8]; context.shadowBlur = 10; }
   context.beginPath();
-  context.arc(x * size + size / 2, y * size + size / 2, size / 2 - 5, 0, Math.PI * 2);
+  if (skinName === 'pixel') {
+    const m = size / 6 * 2; // anillo cuadrado "pixelado"
+    context.rect(x * size + m, y * size + m, size - 2 * m, size - 2 * m);
+  } else {
+    context.arc(x * size + size / 2, y * size + size / 2, size / 2 - 5, 0, Math.PI * 2);
+  }
   context.stroke();
   context.globalAlpha = 1;
+  resetGlow(context);
 }
 
 function drawGrid() {
@@ -324,6 +427,7 @@ function init() {
 }
 
 document.addEventListener('keydown', e => {
+  if (document.activeElement === skinSelect) skinSelect.blur(); // el select no debe capturar teclas de juego
   if (e.code === 'KeyP') { togglePause(); return; }
   if (paused || gameOver) return;
   switch (e.code) {
@@ -355,5 +459,10 @@ themeToggle.addEventListener('click', () => {
   themeToggle.blur(); // evita que Space active el botón en vez de la caída
 });
 
+skinSelect.addEventListener('change', () => {
+  applySkin(skinSelect.value, true);
+  skinSelect.blur(); // evita que Space/flechas cambien el select durante el juego
+});
+
 init();
-applyTheme(document.documentElement.dataset.theme === 'light', false);
+applySkin(skinName, false);

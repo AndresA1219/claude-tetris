@@ -7,6 +7,7 @@
   <script>
     try {
       if (localStorage.getItem('theme') === 'light') document.documentElement.dataset.theme = 'light';
+      if (/^[a-z]+$/.test(localStorage.getItem('skin') || '')) document.documentElement.dataset.skin = localStorage.getItem('skin');
     } catch (e) {}
   </script>
   <link rel="stylesheet" href="style.css" />
@@ -16,6 +17,15 @@
     <span class="theme-text">Modo claro</span>
     <span class="switch"></span>
   </button>
+  <label class="skin-picker" for="skin-select">
+    <span class="skin-text">Skin</span>
+    <select id="skin-select" aria-label="Skin visual">
+      <option value="retro">Retro</option>
+      <option value="neon">Neon</option>
+      <option value="pastel">Pastel</option>
+      <option value="pixel">Pixel art</option>
+    </select>
+  </label>
   <h1 class="title">TETRIS</h1>
   <div class="wrapper">
     <div class="game-container">
