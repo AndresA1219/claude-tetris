@@ -262,6 +262,102 @@ kbd {
   color: var(--muted);
 }
 
+/* ---- Records ---- */
+.start-screen {
+  background: var(--bg);
+  z-index: 2;
+}
+
+.start-screen.hidden {
+  display: none;
+}
+
+.start-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 8px;
+  color: var(--accent);
+}
+
+#start-btn {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: none;
+  border-radius: 6px;
+  padding: 10px 36px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+#start-btn:hover {
+  background: var(--accent-hover);
+}
+
+.records-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.records-box.hidden,
+.name-form.hidden {
+  display: none;
+}
+
+.records-heading {
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-weight: 600;
+  color: var(--label);
+}
+
+.records-table {
+  border-collapse: collapse;
+  font-size: 12px;
+  min-width: 260px;
+}
+
+.records-table th {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--label);
+  font-weight: 600;
+  text-align: right;
+  padding: 2px 6px;
+}
+
+.records-table td {
+  font-family: 'Courier New', Courier, monospace;
+  text-align: right;
+  padding: 3px 6px;
+  color: var(--text);
+}
+
+.records-table th:nth-child(2),
+.records-table td:nth-child(2) {
+  text-align: left;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.records-table tr.new td {
+  background: var(--kbd-bg);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.records-empty,
+.records-stats {
+  font-size: 12px;
+  color: var(--muted);
+}
+
 .skin-picker select {
   background: var(--kbd-bg);
   color: var(--text);
@@ -282,4 +378,59 @@ kbd {
   --board-bg: #000000;
   --board-border: #2a2a4a;
   --grid: #16162a;
+}
+
+.name-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.name-row {
+  display: flex;
+  gap: 6px;
+}
+
+#name-input {
+  width: 130px;
+  background: var(--kbd-bg);
+  border: 1px solid var(--kbd-border);
+  border-radius: 4px;
+  padding: 5px 8px;
+  color: var(--text);
+  font-size: 13px;
+  user-select: text;
+}
+
+#name-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+#name-save-btn {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: none;
+  border-radius: 4px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.records-clear {
+  background: none;
+  border: 1px solid var(--kbd-border);
+  border-radius: 4px;
+  padding: 3px 10px;
+  font-size: 11px;
+  color: var(--danger);
+  cursor: pointer;
+}
+
+.records-clear:hover {
+  background: var(--kbd-bg);
 }
