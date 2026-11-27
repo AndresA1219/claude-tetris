@@ -74,7 +74,7 @@ function applyTheme(light, persist) {
   if (current && next) { draw(); drawNext(); } // repinta también en pausa / game over
 }
 
-let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+let board, current, next, score, lines, level, levelBase, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 let combo = 0, maxCombo = 0, started = false; // combo: locks seguidos que limpian línea
 
 function createBoard() {
@@ -141,7 +141,7 @@ function clearLines() {
   if (cleared) {
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
-    level = Math.floor(lines / 10) + 1;
+    level = levelBase + Math.floor(lines / 10) + 1;
     dropInterval = Math.max(100, 1000 - (level - 1) * 90);
     updateHUD();
   }
@@ -377,6 +377,7 @@ function drawNext() {
 function endGame() {
   gameOver = true;
   cancelAnimationFrame(animId);
+  closePauseMenu();
   overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
   overlay.classList.remove('hidden');
@@ -387,6 +388,7 @@ function togglePause() {
   if (gameOver) return;
   paused = !paused;
   if (!paused) {
+    closePauseMenu();
     lastTime = performance.now();
     loop(lastTime);
   } else {
@@ -394,6 +396,7 @@ function togglePause() {
     overlayTitle.textContent = 'PAUSA';
     overlayScore.textContent = '';
     overlay.classList.remove('hidden');
+    openPauseMenu();
   }
 }
 
@@ -422,10 +425,13 @@ function init() {
   board = createBoard();
   score = 0;
   lines = 0;
-  level = 1;
+  levelBase = startLevel - 1;
+  level = startLevel;
+  closePauseMenu();
+  restartBtn.blur(); // evita que Space lo reactive durante la partida
   paused = false;
   gameOver = false;
-  dropInterval = 1000;
+  dropInterval = Math.max(100, 1000 - (level - 1) * 90);
   dropAccum = 0;
   lastTime = performance.now();
   next = randomPiece();
@@ -620,7 +626,7 @@ document.addEventListener('keydown', e => {
   if (document.activeElement === skinSelect) skinSelect.blur(); // el select no debe capturar teclas de juego
   // ignora el juego mientras se escribe en un input o en la pantalla de inicio
   if (!started || (e.target instanceof HTMLInputElement)) return;
-  if (e.code === 'KeyP') { togglePause(); return; }
+  if (menuKey(e)) return;
   if (paused || gameOver) return;
   switch (e.code) {
     case 'ArrowLeft':
@@ -645,6 +651,90 @@ document.addEventListener('keydown', e => {
 });
 
 restartBtn.addEventListener('click', init);
+
+// ---- Menú de pausa ----
+const pauseMenu = document.getElementById('pause-menu');
+const pmMain = document.getElementById('pm-main');
+const pmControls = document.getElementById('pm-controls');
+const pmLevelBtn = document.getElementById('pm-level');
+const pmLevelVal = document.getElementById('pm-level-val');
+let startLevel = 1; // nivel inicial para el próximo init()
+
+try {
+  const n = parseInt(localStorage.getItem('startLevel'), 10);
+  if (n >= 1 && n <= 10) startLevel = n;
+} catch (e) {}
+
+function setStartLevel(n) {
+  startLevel = ((n - 1 + 10) % 10) + 1; // cicla 1–10
+  pmLevelVal.textContent = startLevel;
+  try { localStorage.setItem('startLevel', String(startLevel)); } catch (e) {}
+}
+
+function pmButtons() {
+  const view = pmControls.hidden ? pmMain : pmControls;
+  return [...view.querySelectorAll('button')];
+}
+
+function showPmView(controls) {
+  pmMain.hidden = controls;
+  pmControls.hidden = !controls;
+  pmButtons()[0].focus();
+}
+
+function openPauseMenu() {
+  overlay.classList.add('pause-mode');
+  pauseMenu.hidden = false;
+  pmLevelVal.textContent = startLevel;
+  showPmView(false);
+}
+
+function closePauseMenu() {
+  overlay.classList.remove('pause-mode');
+  pauseMenu.hidden = true;
+  pmMain.hidden = false;
+  pmControls.hidden = true;
+  if (pauseMenu.contains(document.activeElement)) document.activeElement.blur();
+}
+
+// Devuelve true si la tecla ya fue consumida (P/Esc o menú abierto)
+function menuKey(e) {
+  if (e.code === 'KeyP' || e.code === 'Escape') {
+    if (gameOver) return true;
+    if (!e.repeat) {
+      if (paused && e.code === 'Escape' && !pmControls.hidden) showPmView(false);
+      else togglePause();
+    }
+    return true;
+  }
+  if (!paused) return false;
+  const btns = pmButtons();
+  const i = btns.indexOf(document.activeElement);
+  switch (e.code) {
+    case 'ArrowDown':
+      e.preventDefault();
+      btns[i < 0 ? 0 : (i + 1) % btns.length].focus();
+      break;
+    case 'ArrowUp':
+      e.preventDefault();
+      btns[i < 0 ? btns.length - 1 : (i - 1 + btns.length) % btns.length].focus();
+      break;
+    case 'ArrowLeft':
+    case 'ArrowRight':
+      e.preventDefault();
+      if (document.activeElement === pmLevelBtn) setStartLevel(startLevel + (e.code === 'ArrowRight' ? 1 : -1));
+      break;
+    default:
+      if (i < 0 && (e.code === 'Enter' || e.code === 'Space')) { e.preventDefault(); btns[0].focus(); }
+  }
+  return true; // bloquea el juego mientras el menú está abierto
+}
+
+document.getElementById('pm-resume').addEventListener('click', togglePause);
+document.getElementById('pm-restart').addEventListener('click', init);
+document.getElementById('pm-controls-btn').addEventListener('click', () => showPmView(true));
+document.getElementById('pm-back').addEventListener('click', () => showPmView(false));
+pmLevelBtn.addEventListener('click', () => setStartLevel(startLevel + 1));
 
 themeToggle.addEventListener('click', () => {
   applyTheme(document.documentElement.dataset.theme !== 'light', true);

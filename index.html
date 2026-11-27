@@ -57,7 +57,7 @@
             <li><kbd>↑</kbd> rotar</li>
             <li><kbd>↓</kbd> bajar</li>
             <li><kbd>Space</kbd> caída</li>
-            <li><kbd>P</kbd> pausa</li>
+            <li><kbd>P</kbd> / <kbd>Esc</kbd> pausa</li>
           </ul>
         </div>
       </aside>
@@ -80,6 +80,28 @@
           <button type="button" id="gameover-clear-btn" class="records-clear">Borrar records</button>
         </div>
         <button id="restart-btn">Reiniciar</button>
+
+        <!-- Menú de pausa -->
+        <div id="pause-menu" class="pause-menu" role="dialog" aria-labelledby="overlay-title" hidden>
+          <div id="pm-main" class="pm-view">
+            <button type="button" id="pm-resume">Reanudar</button>
+            <button type="button" id="pm-restart">Reiniciar</button>
+            <button type="button" id="pm-controls-btn">Ver controles</button>
+            <button type="button" id="pm-level" aria-label="Nivel inicial">
+              <span>Nivel inicial</span><span>&lsaquo; <b id="pm-level-val">1</b> &rsaquo;</span>
+            </button>
+          </div>
+          <div id="pm-controls" class="pm-view" hidden>
+            <ul class="pm-keys">
+              <li><kbd>&larr;</kbd><kbd>&rarr;</kbd> mover</li>
+              <li><kbd>&uarr;</kbd> / <kbd>X</kbd> rotar</li>
+              <li><kbd>&darr;</kbd> bajar</li>
+              <li><kbd>Space</kbd> caída</li>
+              <li><kbd>P</kbd> / <kbd>Esc</kbd> pausa</li>
+            </ul>
+            <button type="button" id="pm-back">Volver</button>
+          </div>
+        </div>
       </div>
     </div>
 

@@ -42,9 +42,10 @@ Es una versión jugable del Tetris clásico con todas las mecánicas que esperar
 - **Vista previa** de la siguiente pieza.
 - **Sistema de puntuación** clásico de Tetris (100 / 300 / 500 / 800 multiplicado por nivel).
 - **Niveles** que aumentan cada 10 líneas y aceleran la caída.
-- **Pausa** y **Game Over** con opción de reinicio.
+- **Menú de pausa** (`P` o `Esc`): Reanudar, Reiniciar sin recargar la página, Ver controles y **Nivel inicial** (1–10, se aplica en la siguiente partida y se guarda en `localStorage`). Mientras está abierto el juego no recibe teclas.
 - **Skins visuales** seleccionables (selector junto al interruptor de tema): Retro (bloques planos), Neon (fondo negro con brillo), Pastel (colores suaves y esquinas redondeadas) y Pixel art (textura de píxeles). Se guardan en `localStorage` y conviven con el modo claro/oscuro.
 - **Pantalla de inicio** con botón **Jugar** y **tabla de records local** (top 5 en `localStorage['tetris-records']`). Si tu puntuación entra en el top, al terminar puedes escribir tu nombre (máx. 12 caracteres) y tu entrada se resalta en la tabla. También se muestran el mejor combo y el máximo de líneas históricos (combo = fijaciones consecutivas que limpian línea), y un botón **Borrar records** (con confirmación).
+- **Game Over** con opción de reinicio.
 
 ---
 
@@ -87,7 +88,8 @@ Después abre `http://localhost:8000` en el navegador.
 | `↑` o `X` | Rotar la pieza en sentido horario |
 | `↓`       | Soft drop (bajar más rápido)      |
 | `Espacio` | Hard drop (caída instantánea)     |
-| `P`       | Pausar / reanudar                 |
+| `P` / `Esc` | Abrir / cerrar el menú de pausa |
+| `↑` `↓` `Enter` | Navegar el menú de pausa (`←` `→` cambian el nivel inicial) |
 
 ---
 
